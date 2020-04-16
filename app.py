@@ -47,19 +47,31 @@ def precipitation():
 
     session = Session(engine)
 
-    # Query precipitation records
     twelve_months = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
 
-    # Calculate the date 1 year ago from the last data point in the database
     one_year = dt.date(2017, 8, 9) - dt.timedelta(days=365)
 
-    # Perform a query to retrieve the data and precipitation scores
     precipitation = session.query(Measurement.date, Measurement.prcp).\
         filter(Measurement.date > one_year).order_by(Measurement.date).all()
     
     session.close()
 
-    # Convert results into a dictionary
     dict = dict(precipitation)
 
     return jsonify(dict)
+
+
+    @app.route("/api/v1.0/stations")
+def stations():
+    """Station Records"""
+
+    session = Session(engine)
+    
+    stations = session.query(Measurement.station, func.count(Measurement.station)).\
+        group_by(Measurement.station).order_by(func.count(Measurement.station).desc()).all()
+    
+    session.close()
+
+    station_list = [list(U) for U in stations]
+
+    return jsonify(station_list)
